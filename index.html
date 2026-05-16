@@ -3,28 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$ Mortgage Calculator</title>
+<title>Professional Mortgage Calculator</title>
 
-<!-- MaterializeCSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-<!-- DataTables CSS -->
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<!-- jQuery for table management -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables CSS/JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <style>
-/* Table styles */
-.extra-payment { background-color: #d4edda !important; }
-.principal { font-weight:bold; color:blue; }
-.interest { font-style:italic; color:red; }
-.remaining-low { background-color:#fff3cd !important; }
+/* Tooltip icon styling */
+.tooltip-icon { cursor: pointer; color: #0f766e; }
 
-/* Smaller DataTables search box */
 .dataTables_filter input {
   width: 150px !important;
   display: inline-block;
@@ -32,148 +29,179 @@
 }
 .dataTables_filter label { font-size: 0.9em; }
 
-/* Tooltip icon */
-.tooltipped { cursor: pointer; vertical-align: middle; margin-left: 5px; color: #00695c; }
+/* Table number color coding */
+.principal { color: green; font-weight:bold; }
+.extra-payment { color: blue; font-weight:bold; }
+.interest { color: red; font-weight:bold; }
+.pmi { color: purple; font-weight:bold; }
+.balance { color: navy; }
+.savings-positive { color: green; font-weight:bold; }
+.savings-negative { color: red; font-weight:bold; }
 </style>
 </head>
-<body>
-<nav>
-  <div class="nav-wrapper teal">
-    <a href="#" class="brand-logo center">Mortgage Calculator</a>
+<body class="bg-gray-50">
+
+<header class="bg-teal-700 text-white p-4 text-center text-xl font-bold">
+  Mortgage Calculator
+</header>
+
+<main class="container mx-auto p-4">
+  <h2 class="text-lg font-semibold mb-4 text-center">Compare Two Mortgage Scenarios</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Scenario 1 -->
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-semibold mb-3">Scenario 1</h3>
+      <div class="space-y-4">
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Loan Amount ($)</label>
+          <span class="tooltip-icon" title="The total loan amount you are borrowing. Example: 300,000">❓</span>
+        </div>
+        <input type="number" id="principal1" value="300000" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Interest Rate (%)</label>
+          <span class="tooltip-icon" title="Annual interest rate of the loan. Example: 6%">❓</span>
+        </div>
+        <input type="number" step="0.01" id="interestRate1" value="6" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Term (Years)</label>
+          <span class="tooltip-icon" title="Number of years for the loan. Example: 30">❓</span>
+        </div>
+        <input type="number" id="termYears1" value="30" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Extra Monthly Payment ($)</label>
+          <span class="tooltip-icon" title="Extra payment you plan to pay each month. Example: 200">❓</span>
+        </div>
+        <input type="number" id="extraPayment1" value="0" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Extra Payments JSON</label>
+          <span class="tooltip-icon" title='Specify extra payments for any month using JSON. Example: {"1":500,"12":1000}'>❓</span>
+        </div>
+        <textarea id="extraTable1" class="w-full border rounded px-2 py-1">{}</textarea>
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Property Tax ($/year)</label>
+          <span class="tooltip-icon" title="Annual property taxes. Example: 3,600">❓</span>
+        </div>
+        <input type="number" id="propertyTax1" value="3600" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Home Insurance ($/year)</label>
+          <span class="tooltip-icon" title="Annual home insurance. Example: 1,200">❓</span>
+        </div>
+        <input type="number" id="homeInsurance1" value="1200" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">PMI ($/year)</label>
+          <span class="tooltip-icon" title="Private mortgage insurance if down payment <20%. Example: 0">❓</span>
+        </div>
+        <input type="number" id="pmi1" value="0" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Points (%)</label>
+          <span class="tooltip-icon" title="Points paid upfront to lower interest rate. Example: 1">❓</span>
+        </div>
+        <input type="number" step="0.01" id="points1" value="0" class="w-full border rounded px-2 py-1">
+      </div>
+    </div>
+
+    <!-- Scenario 2 -->
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-semibold mb-3">Scenario 2</h3>
+      <div class="space-y-4">
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Loan Amount ($)</label>
+          <span class="tooltip-icon" title="The total loan amount you are borrowing. Example: 300,000">❓</span>
+        </div>
+        <input type="number" id="principal2" value="300000" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Interest Rate (%)</label>
+          <span class="tooltip-icon" title="Annual interest rate of the loan. Example: 5.5%">❓</span>
+        </div>
+        <input type="number" step="0.01" id="interestRate2" value="5.5" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Term (Years)</label>
+          <span class="tooltip-icon" title="Number of years for the loan. Example: 30">❓</span>
+        </div>
+        <input type="number" id="termYears2" value="30" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Extra Monthly Payment ($)</label>
+          <span class="tooltip-icon" title="Extra payment you plan to pay each month. Example: 200">❓</span>
+        </div>
+        <input type="number" id="extraPayment2" value="0" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Extra Payments JSON</label>
+          <span class="tooltip-icon" title='Specify extra payments for any month using JSON. Example: {"1":500,"12":1000}'>❓</span>
+        </div>
+        <textarea id="extraTable2" class="w-full border rounded px-2 py-1">{}</textarea>
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Property Tax ($/year)</label>
+          <span class="tooltip-icon" title="Annual property taxes. Example: 3,600">❓</span>
+        </div>
+        <input type="number" id="propertyTax2" value="3600" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Home Insurance ($/year)</label>
+          <span class="tooltip-icon" title="Annual home insurance. Example: 1,200">❓</span>
+        </div>
+        <input type="number" id="homeInsurance2" value="1200" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">PMI ($/year)</label>
+          <span class="tooltip-icon" title="Private mortgage insurance if down payment <20%. Example: 0">❓</span>
+        </div>
+        <input type="number" id="pmi2" value="0" class="w-full border rounded px-2 py-1">
+
+        <div class="flex items-center space-x-2">
+          <label class="flex-1">Points (%)</label>
+          <span class="tooltip-icon" title="Points paid upfront to lower interest rate. Example: 1">❓</span>
+        </div>
+        <input type="number" step="0.01" id="points2" value="0" class="w-full border rounded px-2 py-1">
+      </div>
+    </div>
   </div>
-</nav>
 
-<div class="container">
-<h4 class="center-align">Compare Two Mortgage Scenarios</h4>
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Mortgage Summary</h3>
+    <div id="summary" class="bg-white p-4 rounded shadow overflow-x-auto"></div>
+  </div>
 
-<div class="row">
-  <!-- Scenario 1 -->
-  <div class="col s12 m6">
-    <h5>Scenario 1</h5>
-    <div class="input-field">
-      <input type="number" id="principal1" value="300000">
-      <label>Loan Amount ($)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="The total loan amount you are borrowing. Example: 300,000">help_outline</i>
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <h3 class="text-lg font-semibold mb-2">Principal vs Interest</h3>
+      <div id="principalInterestChart"></div>
     </div>
-    <div class="input-field">
-      <input type="number" step="0.01" id="interestRate1" value="6">
-      <label>Interest Rate (%)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual interest rate of the loan. Example: 6 for 6%">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="termYears1" value="30">
-      <label>Term (Years)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Number of years for the loan. Example: 30">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="extraPayment1" value="0">
-      <label>Extra Monthly Payment ($)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Extra payment you plan to pay each month. Example: 200">help_outline</i>
-    </div>
-    <div class="input-field">
-      <textarea id="extraTable1" class="materialize-textarea">{}</textarea>
-      <label>Extra Payments JSON</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Specify extra payments for any month using JSON. Example: {1:500,12:1000}">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="propertyTax1" value="3600">
-      <label>Property Tax ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual property taxes. Example: 3,600">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="homeInsurance1" value="1200">
-      <label>Home Insurance ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual home insurance. Example: 1,200">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="pmi1" value="0">
-      <label>PMI ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Private mortgage insurance if down payment <20%. Example: 0">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" step="0.01" id="points1" value="0">
-      <label>Points (%)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Points paid upfront to lower interest rate. Example: 1">help_outline</i>
+    <div>
+      <h3 class="text-lg font-semibold mb-2">Breakeven Chart</h3>
+      <div id="breakevenChart"></div>
     </div>
   </div>
 
-  <!-- Scenario 2 -->
-  <div class="col s12 m6">
-    <h5>Scenario 2</h5>
-    <div class="input-field">
-      <input type="number" id="principal2" value="300000">
-      <label>Loan Amount ($)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="The total loan amount you are borrowing. Example: 300,000">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" step="0.01" id="interestRate2" value="5.5">
-      <label>Interest Rate (%)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual interest rate of the loan. Example: 5.5%">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="termYears2" value="30">
-      <label>Term (Years)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Number of years for the loan. Example: 30">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="extraPayment2" value="0">
-      <label>Extra Monthly Payment ($)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Extra payment you plan to pay each month. Example: 200">help_outline</i>
-    </div>
-    <div class="input-field">
-      <textarea id="extraTable2" class="materialize-textarea">{}</textarea>
-      <label>Extra Payments JSON</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Specify extra payments for any month using JSON. Example: {1:500,12:1000}">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="propertyTax2" value="3600">
-      <label>Property Tax ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual property taxes. Example: 3,600">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="homeInsurance2" value="1200">
-      <label>Home Insurance ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Annual home insurance. Example: 1,200">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" id="pmi2" value="0">
-      <label>PMI ($/year)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Private mortgage insurance if down payment <20%. Example: 0">help_outline</i>
-    </div>
-    <div class="input-field">
-      <input type="number" step="0.01" id="points2" value="0">
-      <label>Points (%)</label>
-      <i class="material-icons tiny tooltipped" data-position="right" data-tooltip="Points paid upfront to lower interest rate. Example: 1">help_outline</i>
-    </div>
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Total Savings</h3>
+    <div id="totalSavingsChart"></div>
   </div>
-</div>
 
-<h5>Mortgage Summary</h5>
-<div id="summary" class="card-panel teal lighten-5"></div>
-
-<h5>Principal vs Interest Chart</h5>
-<canvas id="principalInterestChart"></canvas>
-
-<h5>Breakeven Chart</h5>
-<canvas id="breakevenChart"></canvas>
-
-<h5>Total Savings Over Time</h5>
-<canvas id="totalSavingsChart"></canvas>
-
-<h5>Amortization Tables</h5>
-<div id="amortizationTables"></div>
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Amortization Tables</h3>
+    <div id="amortizationTables"></div>
+  </div>
+</main>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  M.Tooltip.init(document.querySelectorAll('.tooltipped'));
-});
-
 // Utility: format numbers with commas
-function fmt(n) {
-  return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-}
+function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 
-// Mortgage calculation logic
+// Mortgage calculation
 function calculateMortgage(principal, rate, years, extra, extraTable={}, tax=0, insurance=0, pmi=0, points=0){
   const monthlyRate = rate/12/100;
   const n = years*12;
@@ -181,7 +209,7 @@ function calculateMortgage(principal, rate, years, extra, extraTable={}, tax=0, 
   const monthlyPayment = principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
   let balance = principal;
   let schedule = [];
-  const startDate = new Date(); // always current date
+  const startDate = new Date();
   for(let i=1;i<=n;i++){
     const interest = balance*monthlyRate;
     let principalPayment = monthlyPayment-interest;
@@ -222,117 +250,112 @@ function update(){
   const m1 = calculateMortgage(parseFloat(inputs1[0]),parseFloat(inputs1[1]),parseInt(inputs1[2]),parseFloat(inputs1[3]),extra1,parseFloat(inputs1[4]),parseFloat(inputs1[5]),parseFloat(inputs1[6]),parseFloat(inputs1[7]));
   const m2 = calculateMortgage(parseFloat(inputs2[0]),parseFloat(inputs2[1]),parseInt(inputs2[2]),parseFloat(inputs2[3]),extra2,parseFloat(inputs2[4]),parseFloat(inputs2[5]),parseFloat(inputs2[6]),parseFloat(inputs2[7]));
 
-  // Summary
+  // Update summary
   document.getElementById('summary').innerHTML=`
-    <table class="highlight summary-table">
-      <tr><td>Scenario</td><td>Monthly Payment</td><td>Total Interest</td><td>Total Paid</td><td>Points Cost</td><td>Breakeven Month</td></tr>
-      <tr><td>1</td><td>$${fmt(m1.monthlyPayment)}</td><td>$${fmt(m1.totalInterest)}</td><td>$${fmt(m1.totalPaid)}</td><td>$${fmt(m1.pointsCost)}</td><td>${m1.breakeven}</td></tr>
-      <tr><td>2</td><td>$${fmt(m2.monthlyPayment)}</td><td>$${fmt(m2.totalInterest)}</td><td>$${fmt(m2.totalPaid)}</td><td>$${fmt(m2.pointsCost)}</td><td>${m2.breakeven}</td></tr>
+    <table class="min-w-full border border-gray-200">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-2 py-1 border">Scenario</th><th class="px-2 py-1 border">Monthly Payment</th>
+          <th class="px-2 py-1 border">Total Interest</th><th class="px-2 py-1 border">Total Paid</th>
+          <th class="px-2 py-1 border">Points Cost</th><th class="px-2 py-1 border">Breakeven Month</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="px-2 py-1 border">1</td>
+          <td class="px-2 py-1 border principal">$${fmt(m1.monthlyPayment)}</td>
+          <td class="px-2 py-1 border interest">$${fmt(m1.totalInterest)}</td>
+          <td class="px-2 py-1 border">$${fmt(m1.totalPaid)}</td>
+          <td class="px-2 py-1 border pmi">$${fmt(m1.pointsCost)}</td>
+          <td class="px-2 py-1 border">$${m1.breakeven}</td>
+        </tr>
+        <tr>
+          <td class="px-2 py-1 border">2</td>
+          <td class="px-2 py-1 border principal">$${fmt(m2.monthlyPayment)}</td>
+          <td class="px-2 py-1 border interest">$${fmt(m2.totalInterest)}</td>
+          <td class="px-2 py-1 border">$${fmt(m2.totalPaid)}</td>
+          <td class="px-2 py-1 border pmi">$${fmt(m2.pointsCost)}</td>
+          <td class="px-2 py-1 border">$${m2.breakeven}</td>
+        </tr>
+      </tbody>
     </table>`;
 
   const labels = m1.schedule.map(p=>p.month);
 
-  // Principal vs Interest Chart
-  const ctx = document.getElementById('principalInterestChart').getContext('2d');
-  if(piChart) piChart.destroy();
-  piChart = new Chart(ctx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'Scenario1 Principal', data:m1.schedule.map(p=>p.principal), borderColor:'blue', fill:false},
-        {label:'Scenario1 Interest', data:m1.schedule.map(p=>p.interest), borderColor:'lightblue', fill:false},
-        {label:'Scenario2 Principal', data:m2.schedule.map(p=>p.principal), borderColor:'red', fill:false},
-        {label:'Scenario2 Interest', data:m2.schedule.map(p=>p.interest), borderColor:'pink', fill:false}
-      ]
-    },
-    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'$'}}}}
-  });
+  // ApexCharts
+  const optionsPI = {
+    chart:{type:'area', height:300, toolbar:{show:true}},
+    series:[
+      {name:'Scenario1 Principal', data:m1.schedule.map(p=>p.principal)},
+      {name:'Scenario1 Interest', data:m1.schedule.map(p=>p.interest)},
+      {name:'Scenario2 Principal', data:m2.schedule.map(p=>p.principal)},
+      {name:'Scenario2 Interest', data:m2.schedule.map(p=>p.interest)}
+    ],
+    xaxis:{categories:labels,title:{text:'Month'}},
+    yaxis:{title:{text:'$'}},
+    tooltip:{y:{formatter:val=>`$${fmt(val)}`}},
+    stroke:{curve:'smooth'}
+  };
+  if(piChart) piChart.updateOptions(optionsPI); else piChart=new ApexCharts(document.querySelector("#principalInterestChart"),optionsPI),piChart.render();
 
-  // Breakeven Chart
-  const ctx2 = document.getElementById('breakevenChart').getContext('2d');
-  if(breakevenChart) breakevenChart.destroy();
-  const breakevenPoint = Math.max(m1.breakeven,m2.breakeven);
-  breakevenChart = new Chart(ctx2,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'Scenario1 Cumulative', data:m1.cumulative, borderColor:'blue', fill:false, tension:0.1},
-        {label:'Scenario2 Cumulative', data:m2.cumulative, borderColor:'red', fill:false, tension:0.1},
-        {label:'Breakeven Marker', data:Array(labels.length).fill(null).map((v,i)=> i+1===breakevenPoint ? m1.cumulative[i] : null), borderColor:'green', borderDash:[5,5], fill:false, pointRadius:8, pointStyle:'triangle'}
-      ]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{position:'top'},
-        tooltip:{callbacks:{label:function(context){
-          if(context.dataset.label==='Breakeven Marker') return 'Breakeven Point';
-          return `${context.dataset.label}: $${fmt(context.parsed.y)} (Month ${context.label})`;
-        }}}
-      },
-      scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'Cumulative $'}}}
-    }
-  });
+  const optionsBreakeven = {
+    chart:{type:'line',height:300},
+    series:[
+      {name:'Scenario1 Cumulative', data:m1.cumulative},
+      {name:'Scenario2 Cumulative', data:m2.cumulative}
+    ],
+    xaxis:{categories:labels,title:{text:'Month'}},
+    tooltip:{y:{formatter:val=>`$${fmt(val)}`}}
+  };
+  if(breakevenChart) breakevenChart.updateOptions(optionsBreakeven); else breakevenChart=new ApexCharts(document.querySelector("#breakevenChart"),optionsBreakeven),breakevenChart.render();
 
-  // Total Savings Chart
-  const cumulativeSavings = m1.schedule.map((p,idx) => (m2.cumulative[idx]||0) - (m1.cumulative[idx]||0));
-  const ctx3 = document.getElementById('totalSavingsChart').getContext('2d');
-  if(savingsChart) savingsChart.destroy();
-  savingsChart = new Chart(ctx3,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[{label:'Cumulative Savings Scenario 1 vs 2', data:cumulativeSavings, borderColor:'green', fill:false, tension:0.1}]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label: ctx=>`$${fmt(ctx.parsed.y)} saved by month ${ctx.label}`}} },
-      scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'Cumulative Savings ($)'}}}
-    }
-  });
+  const cumulativeSavings = m1.schedule.map((p,i)=>(m2.cumulative[i]||0)-(m1.cumulative[i]||0));
+  const optionsSavings = {
+    chart:{type:'line',height:300},
+    series:[{name:'Cumulative Savings', data:cumulativeSavings}],
+    xaxis:{categories:labels,title:{text:'Month'}},
+    tooltip:{y:{formatter:val=>`$${fmt(val)}`}}
+  };
+  if(savingsChart) savingsChart.updateOptions(optionsSavings); else savingsChart=new ApexCharts(document.querySelector("#totalSavingsChart"),optionsSavings),savingsChart.render();
 
-  // Amortization Tables
-  const amortDiv = document.getElementById('amortizationTables');
-  amortDiv.innerHTML='';
+  // Amortization tables
+  const amortDiv = document.getElementById('amortizationTables'); amortDiv.innerHTML='';
   [m1,m2].forEach((m,i)=>{
-    const tableId = `table${i}`;
     const table = document.createElement('table');
-    table.id = tableId;
-    table.className = "display";
+    table.id=`table${i}`; table.className="display";
     const head = document.createElement('thead');
-    const savingsHeader = i===0 ? '<th>Savings vs Scenario 2</th>' : '';
-    head.innerHTML=`<tr><th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Property Tax</th><th>Insurance</th><th>PMI</th><th>Total Payment</th><th>Balance</th>${savingsHeader}</tr>`;
-    table.appendChild(head);
-    const body = document.createElement('tbody');
-    let cumPrincipal=0, cumInterest=0, cumExtra=0, cumTotal=0;
+    head.innerHTML=`<tr>
+      <th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Tax</th><th>Insurance</th><th>PMI</th><th>Total</th><th>Balance</th>
+      <th>Savings vs Scenario ${i===0?2:1}</th>
+    </tr>`; table.appendChild(head);
+    const body=document.createElement('tbody');
+    let cumTotal=0;
     m.schedule.forEach((p,idx)=>{
-      cumPrincipal+=p.principal; cumInterest+=p.interest; cumExtra+=p.extra; cumTotal+=p.total;
-      let savingsCell='';
-      if(i===0 && m2.cumulative[idx]!==undefined){
-        const savings = m2.cumulative[idx]-cumTotal;
-        const color = savings>=0 ? 'green-text' : 'red-text';
-        savingsCell=`<td class="${color}">$${fmt(savings)}</td>`;
-      }
-      const tooltip=`Cumulative Total: $${fmt(cumTotal)}\nPrincipal Paid: $${fmt(cumPrincipal)}\nInterest Paid: $${fmt(cumInterest)}\nExtra Paid: $${fmt(cumExtra)}\nRemaining Balance: $${fmt(p.balance)}${i===0 && m2.cumulative[idx]!==undefined ? '\nSavings vs Scenario 2: $'+fmt(m2.cumulative[idx]-cumTotal):''}`;
-      const tr = document.createElement('tr'); tr.title=tooltip;
-      tr.innerHTML=`<td>${p.month}</td><td>${p.date}</td><td class="principal">$${fmt(p.principal)}</td><td class="interest">$${fmt(p.interest)}</td><td class="${p.extra>0?'extra-payment':''}">$${fmt(p.extra)}</td><td>$${fmt(p.tax)}</td><td>$${fmt(p.insurance)}</td><td>$${fmt(p.pmi)}</td><td>$${fmt(p.total)}</td><td>$${fmt(p.balance)}</td>${savingsCell}`;
+      cumTotal+=p.total;
+      const savings=i===0 && m2.cumulative[idx]? m2.cumulative[idx]-cumTotal : 0;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${p.month}</td><td>${p.date}</td>
+        <td class="principal">$${fmt(p.principal)}</td>
+        <td class="interest">$${fmt(p.interest)}</td>
+        <td class="extra-payment">$${fmt(p.extra)}</td>
+        <td>$${fmt(p.tax)}</td>
+        <td>$${fmt(p.insurance)}</td>
+        <td class="pmi">$${fmt(p.pmi)}</td>
+        <td>$${fmt(p.total)}</td>
+        <td class="balance">$${fmt(p.balance)}</td>
+        <td class="${savings>=0?'savings-positive':'savings-negative'}">$${fmt(savings)}</td>`;
       body.appendChild(tr);
     });
     table.appendChild(body);
-    amortDiv.appendChild(document.createElement('h5')).textContent=`Scenario ${i+1} Amortization Table`;
+    amortDiv.appendChild(document.createElement('h4')).textContent=`Scenario ${i+1} Amortization`;
     amortDiv.appendChild(table);
-    $(`#${tableId}`).DataTable({destroy:true,pageLength:10,responsive:true});
+    $(`#table${i}`).DataTable({destroy:true,pageLength:10,responsive:true});
   });
 }
 
-// Event listeners for reactivity
-document.querySelectorAll('input, textarea').forEach(el=>el.addEventListener('input',update));
-document.addEventListener('DOMContentLoaded',()=>update());
+// Event listeners
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',update));
+document.addEventListener('DOMContentLoaded',update);
 </script>
-
-<!-- Materialize JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 </html>
