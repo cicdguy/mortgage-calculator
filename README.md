@@ -1,3 +1,3 @@
-# Morgage Calc
+# Morgage Calculator
 
 <https://cicdguy.github.io/mortgage-calculator/>
