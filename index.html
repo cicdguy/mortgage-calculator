@@ -11,7 +11,7 @@
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-<!-- jQuery for table management -->
+<!-- jQuery for DataTables -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- DataTables CSS/JS -->
@@ -19,14 +19,8 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <style>
-/* Tooltip icon styling */
 .tooltip-icon { cursor: pointer; color: #0f766e; }
-
-.dataTables_filter input {
-  width: 150px !important;
-  display: inline-block;
-  font-size: 0.9em;
-}
+.dataTables_filter input { width: 150px !important; font-size: 0.9em; }
 .dataTables_filter label { font-size: 0.9em; }
 
 /* Table number color coding */
@@ -198,26 +192,28 @@
 </main>
 
 <script>
-// Utility: format numbers with commas
-function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+// Format numbers with commas
+function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});}
+
+// Axis formatter for ApexCharts
+function axisFormatter(val){return val.toLocaleString(undefined,{maximumFractionDigits:0});}
 
 // Mortgage calculation
 function calculateMortgage(principal, rate, years, extra, extraTable={}, tax=0, insurance=0, pmi=0, points=0){
-  const monthlyRate = rate/12/100;
-  const n = years*12;
-  const pointsCost = principal*(points/100);
-  const monthlyPayment = principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
-  let balance = principal;
-  let schedule = [];
-  const startDate = new Date();
+  const monthlyRate=rate/12/100;
+  const n=years*12;
+  const pointsCost=principal*(points/100);
+  const monthlyPayment=principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
+  let balance=principal;
+  let schedule=[];
+  const startDate=new Date();
   for(let i=1;i<=n;i++){
-    const interest = balance*monthlyRate;
-    let principalPayment = monthlyPayment-interest;
-    let extraThis = extra + (extraTable[i]||0);
+    const interest=balance*monthlyRate;
+    let principalPayment=monthlyPayment-interest;
+    let extraThis=extra+(extraTable[i]||0);
     if(balance<principalPayment+extraThis) principalPayment=balance;
-    balance -= (principalPayment+extraThis);
-    balance = Math.max(0,balance);
-    const date = new Date(startDate); date.setMonth(date.getMonth()+i-1);
+    balance=Math.max(0,balance-(principalPayment+extraThis));
+    const date=new Date(startDate); date.setMonth(date.getMonth()+i-1);
     schedule.push({
       month:i,
       date:date.toISOString().split('T')[0],
@@ -232,8 +228,8 @@ function calculateMortgage(principal, rate, years, extra, extraTable={}, tax=0, 
     });
     if(balance<=0) break;
   }
-  const cumulative = schedule.map((p,j)=>schedule.slice(0,j+1).reduce((s,p)=>s+p.total,0));
-  const breakeven = cumulative.findIndex(c=>c>=pointsCost)+1||schedule.length;
+  const cumulative=schedule.map((p,j)=>schedule.slice(0,j+1).reduce((s,p)=>s+p.total,0));
+  const breakeven=cumulative.findIndex(c=>c>=pointsCost)+1||schedule.length;
   return {schedule,monthlyPayment,totalInterest:schedule.reduce((s,p)=>s+p.interest,0),totalPaid:cumulative[cumulative.length-1],pointsCost,breakeven,cumulative};
 }
 
@@ -250,7 +246,7 @@ function update(){
   const m1 = calculateMortgage(parseFloat(inputs1[0]),parseFloat(inputs1[1]),parseInt(inputs1[2]),parseFloat(inputs1[3]),extra1,parseFloat(inputs1[4]),parseFloat(inputs1[5]),parseFloat(inputs1[6]),parseFloat(inputs1[7]));
   const m2 = calculateMortgage(parseFloat(inputs2[0]),parseFloat(inputs2[1]),parseInt(inputs2[2]),parseFloat(inputs2[3]),extra2,parseFloat(inputs2[4]),parseFloat(inputs2[5]),parseFloat(inputs2[6]),parseFloat(inputs2[7]));
 
-  // Update summary
+  // Summary
   document.getElementById('summary').innerHTML=`
     <table class="min-w-full border border-gray-200">
       <thead class="bg-gray-100">
@@ -282,54 +278,57 @@ function update(){
 
   const labels = m1.schedule.map(p=>p.month);
 
-  // ApexCharts
+  // Principal vs Interest Chart
   const optionsPI = {
-    chart:{type:'area', height:300, toolbar:{show:true}},
-    series:[
+    chart: { type: 'area', height: 500, toolbar:{show:true} },
+    series: [
       {name:'Scenario1 Principal', data:m1.schedule.map(p=>p.principal)},
       {name:'Scenario1 Interest', data:m1.schedule.map(p=>p.interest)},
       {name:'Scenario2 Principal', data:m2.schedule.map(p=>p.principal)},
       {name:'Scenario2 Interest', data:m2.schedule.map(p=>p.interest)}
     ],
-    xaxis:{categories:labels,title:{text:'Month'}},
-    yaxis:{title:{text:'$'}},
-    tooltip:{y:{formatter:val=>`$${fmt(val)}`}},
+    xaxis: { categories: labels, title: { text:'Month' }, tickAmount:12 },
+    yaxis: { title:{text:'$'}, labels:{formatter: axisFormatter} },
+    tooltip:{y:{formatter: val=>`$${fmt(val)}`}},
     stroke:{curve:'smooth'}
   };
   if(piChart) piChart.updateOptions(optionsPI); else piChart=new ApexCharts(document.querySelector("#principalInterestChart"),optionsPI),piChart.render();
 
+  // Breakeven Chart
   const optionsBreakeven = {
-    chart:{type:'line',height:300},
+    chart:{type:'line',height:500},
     series:[
       {name:'Scenario1 Cumulative', data:m1.cumulative},
       {name:'Scenario2 Cumulative', data:m2.cumulative}
     ],
-    xaxis:{categories:labels,title:{text:'Month'}},
-    tooltip:{y:{formatter:val=>`$${fmt(val)}`}}
+    xaxis:{categories: labels, title:{text:'Month'}, tickAmount:12},
+    yaxis:{labels:{formatter: axisFormatter}},
+    tooltip:{y:{formatter: val=>`$${fmt(val)}`}}
   };
   if(breakevenChart) breakevenChart.updateOptions(optionsBreakeven); else breakevenChart=new ApexCharts(document.querySelector("#breakevenChart"),optionsBreakeven),breakevenChart.render();
 
+  // Total Savings Chart
   const cumulativeSavings = m1.schedule.map((p,i)=>(m2.cumulative[i]||0)-(m1.cumulative[i]||0));
   const optionsSavings = {
-    chart:{type:'line',height:300},
+    chart:{type:'line',height:400},
     series:[{name:'Cumulative Savings', data:cumulativeSavings}],
-    xaxis:{categories:labels,title:{text:'Month'}},
-    tooltip:{y:{formatter:val=>`$${fmt(val)}`}}
+    xaxis:{categories: labels, title:{text:'Month'}, tickAmount:12},
+    yaxis:{labels:{formatter: axisFormatter}},
+    tooltip:{y:{formatter: val=>`$${fmt(val)}`}}
   };
   if(savingsChart) savingsChart.updateOptions(optionsSavings); else savingsChart=new ApexCharts(document.querySelector("#totalSavingsChart"),optionsSavings),savingsChart.render();
 
-  // Amortization tables
+  // Amortization Tables
   const amortDiv = document.getElementById('amortizationTables'); amortDiv.innerHTML='';
   [m1,m2].forEach((m,i)=>{
-    const table = document.createElement('table');
-    table.id=`table${i}`; table.className="display";
+    const table = document.createElement('table'); table.id=`table${i}`; table.className="display";
     const head = document.createElement('thead');
     head.innerHTML=`<tr>
-      <th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Tax</th><th>Insurance</th><th>PMI</th><th>Total</th><th>Balance</th>
+      <th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th>
+      <th>Tax</th><th>Insurance</th><th>PMI</th><th>Total</th><th>Balance</th>
       <th>Savings vs Scenario ${i===0?2:1}</th>
     </tr>`; table.appendChild(head);
-    const body=document.createElement('tbody');
-    let cumTotal=0;
+    const body=document.createElement('tbody'); let cumTotal=0;
     m.schedule.forEach((p,idx)=>{
       cumTotal+=p.total;
       const savings=i===0 && m2.cumulative[idx]? m2.cumulative[idx]-cumTotal : 0;
