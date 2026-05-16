@@ -3,44 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional Mortgage Dashboard</title>
+<title>Mortgage Dashboard - D3.js Version</title>
 
-<!-- Tailwind CDN -->
+<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- ApexCharts -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<!-- D3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
 
 <!-- jQuery for DataTables -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- DataTables CSS/JS -->
+<!-- DataTables -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <style>
-.tooltip-icon { cursor: pointer; color: #0f766e; }
-.dataTables_filter input { width: 150px !important; font-size: 0.9em; }
-.dataTables_filter label { font-size: 0.9em; }
-
-/* Table number color coding */
+body.dark { background-color: #1f2937; color: #f9fafb; }
+body.dark table, body.dark th, body.dark td { color: #f9fafb; border-color: #374151; }
+header { transition: all 0.3s; }
 .principal { color: green; font-weight:bold; }
-.extra-payment { color: blue; font-weight:bold; }
 .interest { color: red; font-weight:bold; }
-.pmi { color: purple; font-weight:bold; }
+.extra-payment { color: blue; font-weight:bold; }
 .balance { color: navy; }
 .savings-positive { color: green; font-weight:bold; }
 .savings-negative { color: red; font-weight:bold; }
-
-/* Dark Mode Support */
-body.dark { background-color: #1f2937; color: #f9fafb; }
-body.dark table, body.dark th, body.dark td { color: #f9fafb; border-color: #374151; }
-body.dark header { background-color: #111827; color: #f9fafb; }
+.tooltip { position: absolute; text-align:left; padding:8px; font:12px sans-serif; background: rgba(0,0,0,0.7); color:#fff; border-radius:4px; pointer-events:none; font-weight:bold; }
 </style>
 </head>
 <body class="bg-gray-50">
 
-<header class="bg-teal-700 text-white p-4 text-center text-xl font-bold flex justify-between items-center">
+<header class="bg-teal-700 text-white p-4 text-xl font-bold flex justify-between items-center">
   <span>Mortgage Dashboard</span>
   <button id="themeToggle" class="bg-white text-teal-700 px-3 py-1 rounded">Dark Mode</button>
 </header>
@@ -48,229 +41,252 @@ body.dark header { background-color: #111827; color: #f9fafb; }
 <main class="container mx-auto p-4">
   <h2 class="text-lg font-semibold mb-4 text-center">Compare Two Mortgage Scenarios</h2>
 
+  <!-- Inputs (simplified for demonstration) -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Scenario 1 & 2 forms same as previous code, omitted for brevity -->
-    <!-- (Use the same inputs as in the previous HTML version) -->
-  </div>
-
-  <div class="mt-6">
-    <h3 class="text-lg font-semibold mb-2">Mortgage Summary</h3>
-    <div id="summary" class="bg-white dark:bg-gray-800 p-4 rounded shadow overflow-x-auto"></div>
-  </div>
-
-  <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <h3 class="text-lg font-semibold mb-2">Principal vs Interest</h3>
-      <div id="principalInterestChart"></div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+      <h3 class="font-semibold mb-2">Scenario 1</h3>
+      <label>Principal: <input type="number" id="p1" class="border rounded px-2 py-1" value="300000"></label><br>
+      <label>Rate (%): <input type="number" id="r1" class="border rounded px-2 py-1" value="6.5"></label><br>
+      <label>Years: <input type="number" id="y1" class="border rounded px-2 py-1" value="30"></label><br>
+      <label>Points (%): <input type="number" id="points1" class="border rounded px-2 py-1" value="0"></label><br>
     </div>
-    <div>
-      <h3 class="text-lg font-semibold mb-2">Breakeven Chart</h3>
-      <div id="breakevenChart"></div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+      <h3 class="font-semibold mb-2">Scenario 2</h3>
+      <label>Principal: <input type="number" id="p2" class="border rounded px-2 py-1" value="300000"></label><br>
+      <label>Rate (%): <input type="number" id="r2" class="border rounded px-2 py-1" value="6.0"></label><br>
+      <label>Years: <input type="number" id="y2" class="border rounded px-2 py-1" value="30"></label><br>
+      <label>Points (%): <input type="number" id="points2" class="border rounded px-2 py-1" value="1"></label><br>
     </div>
   </div>
 
   <div class="mt-6">
-    <h3 class="text-lg font-semibold mb-2">Total Savings</h3>
-    <div id="totalSavingsChart"></div>
+    <h3 class="text-lg font-semibold mb-2">Principal vs Interest</h3>
+    <div id="principalInterestChart" class="w-full h-[550px]"></div>
+  </div>
+
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Cumulative Savings / Breakeven</h3>
+    <div id="cumulativeSavingsChart" class="w-full h-[550px]"></div>
   </div>
 
   <div class="mt-6">
     <h3 class="text-lg font-semibold mb-2">Amortization Tables</h3>
-    <div id="amortizationTables"></div>
+    <div id="amortizationTables" class="overflow-x-auto"></div>
   </div>
 </main>
 
 <script>
 // Dark/Light toggle
-document.getElementById('themeToggle').addEventListener('click',()=>{
+document.getElementById('themeToggle').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   document.getElementById('themeToggle').textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
-  update(); // Refresh charts to adapt colors if needed
+  update();
 });
 
-// Format numbers with commas
-function fmt(n){return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});}
+// Tooltip div for D3
+const tooltip = d3.select("body").append("div").attr("class","tooltip").style("opacity",0);
 
-// Axis formatter for ApexCharts
-function axisFormatter(val){return val.toLocaleString(undefined,{maximumFractionDigits:0});}
+// Number formatting
+function fmt(n){ return n.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
 
-// Mortgage calculation function (same as previous version)
-function calculateMortgage(principal, rate, years, extra, extraTable={}, tax=0, insurance=0, pmi=0, points=0){
-  const monthlyRate=rate/12/100;
-  const n=years*12;
-  const pointsCost=principal*(points/100);
-  const monthlyPayment=principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
-  let balance=principal;
-  let schedule=[];
-  const startDate=new Date();
+// Mortgage calculation
+function calculateMortgage(principal, rate, years, extra=0, extraTable={}, points=0){
+  const monthlyRate = rate/12/100;
+  const n = years*12;
+  const pointsCost = principal*(points/100);
+  const monthlyPayment = principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
+  let balance = principal;
+  let schedule = [];
   for(let i=1;i<=n;i++){
-    const interest=balance*monthlyRate;
-    let principalPayment=monthlyPayment-interest;
-    let extraThis=extra+(extraTable[i]||0);
-    if(balance<principalPayment+extraThis) principalPayment=balance;
-    balance=Math.max(0,balance-(principalPayment+extraThis));
-    const date=new Date(startDate); date.setMonth(date.getMonth()+i-1);
-    schedule.push({
-      month:i,
-      date:date.toISOString().split('T')[0],
-      principal:principalPayment,
-      interest,
-      extra:extraThis,
-      tax:tax/12,
-      insurance:insurance/12,
-      pmi:pmi/12,
-      total:principalPayment+interest+extraThis+tax/12+insurance/12+pmi/12,
-      balance
-    });
+    const interest = balance*monthlyRate;
+    let principalPayment = monthlyPayment - interest;
+    let extraThis = extra + (extraTable[i]||0);
+    if(balance<principalPayment+extraThis) principalPayment = balance;
+    balance = Math.max(0,balance-(principalPayment+extraThis));
+    schedule.push({month:i, principal:principalPayment, interest, extra:extraThis, total:principalPayment+interest+extraThis, balance});
     if(balance<=0) break;
   }
-  const cumulative=schedule.map((p,j)=>schedule.slice(0,j+1).reduce((s,p)=>s+p.total,0));
-  const breakeven=cumulative.findIndex(c=>c>=pointsCost)+1||schedule.length;
-  return {schedule,monthlyPayment,totalInterest:schedule.reduce((s,p)=>s+p.interest,0),totalPaid:cumulative[cumulative.length-1],pointsCost,breakeven,cumulative};
+  const cumulative = schedule.map((p,j)=>schedule.slice(0,j+1).reduce((s,p)=>s+p.total,0));
+  return {schedule, cumulative, pointsCost};
 }
 
-// Charts
-let piChart, breakevenChart, savingsChart;
-
+// Main update function
 function update(){
-  // Parse inputs, calculate mortgages (same as previous version)
-  // Omitted for brevity, same calculation logic
-  const parseJSON=(id)=>{try{return JSON.parse(document.getElementById(id).value)}catch(e){return {}}};
-  const extra1=parseJSON('extraTable1'); const extra2=parseJSON('extraTable2');
+  const p1=parseFloat(document.getElementById('p1').value),
+        r1=parseFloat(document.getElementById('r1').value),
+        y1=parseFloat(document.getElementById('y1').value),
+        points1=parseFloat(document.getElementById('points1').value);
+  const p2=parseFloat(document.getElementById('p2').value),
+        r2=parseFloat(document.getElementById('r2').value),
+        y2=parseFloat(document.getElementById('y2').value),
+        points2=parseFloat(document.getElementById('points2').value);
 
-  const inputs1=['principal1','interestRate1','termYears1','extraPayment1','propertyTax1','homeInsurance1','pmi1','points1'].map(id=>document.getElementById(id).value);
-  const inputs2=['principal2','interestRate2','termYears2','extraPayment2','propertyTax2','homeInsurance2','pmi2','points2'].map(id=>document.getElementById(id).value);
+  const m1 = calculateMortgage(p1,r1,y1,0,{},points1);
+  const m2 = calculateMortgage(p2,r2,y2,0,{},points2);
 
-  const m1 = calculateMortgage(parseFloat(inputs1[0]),parseFloat(inputs1[1]),parseInt(inputs1[2]),parseFloat(inputs1[3]),extra1,parseFloat(inputs1[4]),parseFloat(inputs1[5]),parseFloat(inputs1[6]),parseFloat(inputs1[7]));
-  const m2 = calculateMortgage(parseFloat(inputs2[0]),parseFloat(inputs2[1]),parseInt(inputs2[2]),parseFloat(inputs2[3]),extra2,parseFloat(inputs2[4]),parseFloat(inputs2[5]),parseFloat(inputs2[6]),parseFloat(inputs2[7]));
+  drawPrincipalInterest(m1,m2);
+  drawCumulativeSavings(m1,m2);
+  drawAmortizationTables(m1,m2);
+}
 
-  const labels = m1.schedule.map(p=>p.month);
+// Draw Principal vs Interest chart
+function drawPrincipalInterest(m1,m2){
+  const container = d3.select("#principalInterestChart");
+  container.selectAll("*").remove();
+  const width = container.node().clientWidth, height = container.node().clientHeight;
+  const margin={top:50,right:60,bottom:50,left:60};
 
-  // Principal vs Interest Chart with gradients and markers
-  const optionsPI = {
-    chart: { type: 'area', height: 500, toolbar:{show:true} },
-    series: [
-      {name:'Scenario1 Principal', data:m1.schedule.map(p=>p.principal)},
-      {name:'Scenario1 Interest', data:m1.schedule.map(p=>p.interest)},
-      {name:'Scenario2 Principal', data:m2.schedule.map(p=>p.principal)},
-      {name:'Scenario2 Interest', data:m2.schedule.map(p=>p.interest)}
-    ],
-    stroke:{curve:'smooth'},
-    fill:{
-      type:'gradient',
-      gradient:{shade:'light',type:'vertical',shadeIntensity:0.3,opacityFrom:0.6,opacityTo:0.1}
-    },
-    markers:{size:4, hover:{size:6}},
-    tooltip:{y:{formatter: val=>`$${fmt(val)}`}},
-    xaxis:{categories:labels,tickAmount:12,title:{text:'Month'}},
-    yaxis:{labels:{formatter:axisFormatter},title:{text:'$'}}
-  };
-  if(piChart) piChart.updateOptions(optionsPI); else piChart=new ApexCharts(document.querySelector("#principalInterestChart"),optionsPI),piChart.render();
+  const svg = container.append("svg").attr("width",width).attr("height",height);
+  const x = d3.scaleLinear().domain([1,m1.schedule.length]).range([margin.left,width-margin.right]);
+  const yMax = Math.max(d3.max(m1.schedule,d=>d.principal+d.interest),d3.max(m2.schedule,d=>d.principal+d.interest));
+  const y = d3.scaleLinear().domain([0,yMax]).range([height-margin.bottom,margin.top]);
 
-  // Breakeven Chart with gradients and markers
-    const optionsBreakeven = {
-    chart: { type: 'line', height: 500, toolbar:{show:true} },
-    series: [
-      { name:'Scenario1 Cumulative', data:m1.cumulative },
-      { name:'Scenario2 Cumulative', data:m2.cumulative }
-    ],
-    stroke:{curve:'smooth', width:3},
-    fill:{
-      type:'gradient',
-      gradient:{shade:'light',type:'vertical',shadeIntensity:0.3,opacityFrom:0.6,opacityTo:0.1}
-    },
-    markers:{size:4, hover:{size:6}},
-    tooltip:{y:{formatter: val=>`$${fmt(val)}`}},
-    xaxis:{categories:labels,tickAmount:12,title:{text:'Month'}},
-    yaxis:{labels:{formatter:axisFormatter},title:{text:'$'}}
-  };
-  if(breakevenChart) breakevenChart.updateOptions(optionsBreakeven);
-  else breakevenChart=new ApexCharts(document.querySelector("#breakevenChart"),optionsBreakeven),breakevenChart.render();
+  svg.append("g").attr("transform",`translate(0,${height-margin.bottom})`).call(d3.axisBottom(x).ticks(12));
+  svg.append("g").attr("transform",`translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(",")));
 
-  // Total Savings Chart
-  const cumulativeSavings = m1.schedule.map((p,i)=>(m2.cumulative[i]||0)-(m1.cumulative[i]||0));
-  const optionsSavings = {
-    chart:{type:'line',height:400,toolbar:{show:true}},
-    series:[{name:'Cumulative Savings', data:cumulativeSavings}],
-    stroke:{curve:'smooth', width:3},
-    fill:{type:'gradient', gradient:{shade:'light',type:'vertical',shadeIntensity:0.3,opacityFrom:0.6,opacityTo:0.1}},
-    markers:{size:4, hover:{size:6}},
-    tooltip:{y:{formatter: val=>`$${fmt(val)}`}},
-    xaxis:{categories:labels,tickAmount:12,title:{text:'Month'}},
-    yaxis:{labels:{formatter:axisFormatter},title:{text:'$'}}
-  };
-  if(savingsChart) savingsChart.updateOptions(optionsSavings);
-  else savingsChart=new ApexCharts(document.querySelector("#totalSavingsChart"),optionsSavings),savingsChart.render();
+  const line = d3.line().x(d=>x(d.month)).y(d=>y(d.value)).curve(d3.curveMonotoneX);
 
-  // Summary Table
-  document.getElementById('summary').innerHTML=`
-    <table class="min-w-full border border-gray-200 dark:border-gray-700">
-      <thead class="bg-gray-100 dark:bg-gray-700">
-        <tr>
-          <th class="px-2 py-1 border">Scenario</th><th class="px-2 py-1 border">Monthly Payment</th>
-          <th class="px-2 py-1 border">Total Interest</th><th class="px-2 py-1 border">Total Paid</th>
-          <th class="px-2 py-1 border">Points Cost</th><th class="px-2 py-1 border">Breakeven Month</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border">1</td>
-          <td class="px-2 py-1 border principal">$${fmt(m1.monthlyPayment)}</td>
-          <td class="px-2 py-1 border interest">$${fmt(m1.totalInterest)}</td>
-          <td class="px-2 py-1 border">$${fmt(m1.totalPaid)}</td>
-          <td class="px-2 py-1 border pmi">$${fmt(m1.pointsCost)}</td>
-          <td class="px-2 py-1 border">$${m1.breakeven}</td>
-        </tr>
-        <tr>
-          <td class="px-2 py-1 border">2</td>
-          <td class="px-2 py-1 border principal">$${fmt(m2.monthlyPayment)}</td>
-          <td class="px-2 py-1 border interest">$${fmt(m2.totalInterest)}</td>
-          <td class="px-2 py-1 border">$${fmt(m2.totalPaid)}</td>
-          <td class="px-2 py-1 border pmi">$${fmt(m2.pointsCost)}</td>
-          <td class="px-2 py-1 border">$${m2.breakeven}</td>
-        </tr>
-      </tbody>
-    </table>`;
+  const principalData = m1.schedule.map(d=>({month:d.month,value:d.principal}));
+  const interestData = m1.schedule.map(d=>({month:d.month,value:d.interest}));
 
-  // Amortization Tables
-  const amortDiv = document.getElementById('amortizationTables'); amortDiv.innerHTML='';
-  [m1,m2].forEach((m,i)=>{
-    const table = document.createElement('table'); table.id=`table${i}`; table.className="display";
-    const head = document.createElement('thead');
-    head.innerHTML=`<tr>
-      <th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th>
-      <th>Tax</th><th>Insurance</th><th>PMI</th><th>Total</th><th>Balance</th>
-      <th>Savings vs Scenario ${i===0?2:1}</th>
-    </tr>`; table.appendChild(head);
-    const body=document.createElement('tbody'); let cumTotal=0;
-    m.schedule.forEach((p,idx)=>{
-      cumTotal+=p.total;
-      const savings=i===0 && m2.cumulative[idx]? m2.cumulative[idx]-cumTotal : 0;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${p.month}</td><td>${p.date}</td>
-        <td class="principal">$${fmt(p.principal)}</td>
-        <td class="interest">$${fmt(p.interest)}</td>
-        <td class="extra-payment">$${fmt(p.extra)}</td>
-        <td>$${fmt(p.tax)}</td>
-        <td>$${fmt(p.insurance)}</td>
-        <td class="pmi">$${fmt(p.pmi)}</td>
-        <td>$${fmt(p.total)}</td>
-        <td class="balance">$${fmt(p.balance)}</td>
-        <td class="${savings>=0?'savings-positive':'savings-negative'}">$${fmt(savings)}</td>`;
-      body.appendChild(tr);
+  // Gradients
+  const defs = svg.append("defs");
+  defs.append("linearGradient")
+      .attr("id","gradPrincipal").attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1")
+      .selectAll("stop").data([{offset:"0%",color:"green",opacity:0.7},{offset:"100%",color:"green",opacity:0.1}])
+      .enter().append("stop").attr("offset",d=>d.offset).attr("stop-color",d=>d.color).attr("stop-opacity",d=>d.opacity);
+
+  defs.append("linearGradient")
+      .attr("id","gradInterest").attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1")
+      .selectAll("stop").data([{offset:"0%",color:"red",opacity:0.7},{offset:"100%",color:"red",opacity:0.1}])
+      .enter().append("stop").attr("offset",d=>d.offset).attr("stop-color",d=>d.color).attr("stop-opacity",d=>d.opacity);
+
+  // Principal line
+  svg.append("path")
+      .datum(principalData)
+      .attr("fill","none").attr("stroke","url(#gradPrincipal)").attr("stroke-width",2)
+      .transition().duration(1000)
+      .attr("d", line);
+
+  // Interest line
+  svg.append("path")
+      .datum(interestData)
+      .attr("fill","none").attr("stroke","url(#gradInterest)").attr("stroke-width",2)
+      .transition().duration(1000)
+      .attr("d", line);
+
+  // Circles with tooltip for principal
+  svg.selectAll(".circleP")
+      .data(principalData)
+      .enter().append("circle")
+      .attr("r",4).attr("fill","green")
+      .attr("cx",d=>x(d.month)).attr("cy",d=>y(d.value))
+      .on("mouseover",(event,d)=>{
+          tooltip.transition().duration(200).style("opacity",1);
+          tooltip.html(`Month ${d.month}<br>Principal: $${fmt(d.value)}`)
+              .style("left",(event.pageX+10)+"px").style("top",(event.pageY-28)+"px");
+      }).on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0));
+
+  // Circles with tooltip for interest
+  svg.selectAll(".circleI")
+      .data(interestData)
+      .enter().append("circle")
+      .attr("r",4).attr("fill","red")
+      .attr("cx",d=>x(d.month)).attr("cy",d=>y(d.value))
+      .on("mouseover",(event,d)=>{
+          tooltip.transition().duration(200).style("opacity",1);
+          tooltip.html(`Month ${d.month}<br>Interest: $${fmt(d.value)}`)
+              .style("left",(event.pageX+10)+"px").style("top",(event.pageY-28)+"px");
+      }).on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0));
+}
+
+// Draw cumulative savings chart
+function drawCumulativeSavings(m1,m2){
+  const container = d3.select("#cumulativeSavingsChart");
+  container.selectAll("*").remove();
+  const width = container.node().clientWidth, height = container.node().clientHeight;
+  const margin={top:50,right:60,bottom:50,left:60};
+
+  const svg = container.append("svg").attr("width",width).attr("height",height);
+  const x = d3.scaleLinear().domain([1,m1.schedule.length]).range([margin.left,width-margin.right]);
+  const savingsData = m1.schedule.map((d,i)=> (m2.cumulative[i]||0)-(m1.cumulative[i]||0));
+  const y = d3.scaleLinear().domain([0,d3.max(savingsData)]).range([height-margin.bottom,margin.top]);
+
+  svg.append("g").attr("transform",`translate(0,${height-margin.bottom})`).call(d3.axisBottom(x).ticks(12));
+  svg.append("g").attr("transform",`translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(",")));
+
+  // Gradient
+  const defs = svg.append("defs");
+  defs.append("linearGradient").attr("id","gradSavings").attr("x1","0").attr("y1","0").attr("x2","0").attr("y2","1")
+      .selectAll("stop").data([{offset:"0%",color:"blue",opacity:0.7},{offset:"100%",color:"blue",opacity:0.1}])
+      .enter().append("stop").attr("offset",d=>d.offset).attr("stop-color",d=>d.color).attr("stop-opacity",d=>d.opacity);
+
+  const line = d3.line().x((d,i)=>x(i+1)).y(d=>y(d)).curve(d3.curveMonotoneX);
+
+  svg.append("path").datum(savingsData)
+      .attr("fill","none").attr("stroke","url(#gradSavings)").attr("stroke-width",3)
+      .transition().duration(1200)
+      .attr("d",line);
+
+  // Breakeven marker
+  const breakevenMonth = savingsData.findIndex(d=>d>=0)+1;
+  if(breakevenMonth>0){
+    svg.append("line").attr("x1",x(breakevenMonth)).attr("x2",x(breakevenMonth))
+      .attr("y1",y(0)).attr("y2",y(d3.max(savingsData)))
+      .attr("stroke","#FF4560").attr("stroke-width",2).attr("stroke-dasharray","4,4");
+    svg.append("text").attr("x",x(breakevenMonth)+5).attr("y",y(d3.max(savingsData))*0.05)
+      .attr("fill","#FF4560").text(`Breakeven Month (${breakevenMonth})`);
+  }
+
+  svg.selectAll(".circleS")
+      .data(savingsData)
+      .enter().append("circle")
+      .attr("r",4).attr("fill","blue")
+      .attr("cx",(d,i)=>x(i+1)).attr("cy",d=>y(d))
+      .on("mouseover",(event,d,i)=>{
+          tooltip.transition().duration(200).style("opacity",1);
+          tooltip.html(`Month ${i+1}<br>Cumulative Savings: $${fmt(d)}`)
+              .style("left",(event.pageX+10)+"px").style("top",(event.pageY-28)+"px");
+      }).on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0));
+}
+
+// Draw amortization tables
+function drawAmortizationTables(m1,m2){
+  const container = document.getElementById("amortizationTables");
+  container.innerHTML = "";
+
+  function createTable(m, title){
+    let html=`<h4 class="font-semibold mb-2 mt-4">${title}</h4>`;
+    html+=`<table class="display nowrap" style="width:100%"><thead><tr>
+      <th>Month</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Total Payment</th><th>Balance</th></tr></thead><tbody>`;
+    m.schedule.forEach(d=>{
+      html+=`<tr>
+        <td>${d.month}</td>
+        <td class="principal">$${fmt(d.principal)}</td>
+        <td class="interest">$${fmt(d.interest)}</td>
+        <td class="extra-payment">$${fmt(d.extra)}</td>
+        <td>$${fmt(d.total)}</td>
+        <td class="balance">$${fmt(d.balance)}</td>
+      </tr>`;
     });
-    table.appendChild(body);
-    amortDiv.appendChild(document.createElement('h4')).textContent=`Scenario ${i+1} Amortization`;
-    amortDiv.appendChild(table);
-    $(`#table${i}`).DataTable({destroy:true,pageLength:10,responsive:true});
+    html+="</tbody></table>";
+    container.innerHTML+=html;
+  }
+
+  createTable(m1,"Scenario 1");
+  createTable(m2,"Scenario 2");
+
+  $('table.display').DataTable({
+    responsive:true,
+    paging:true,
+    scrollX:true,
+    destroy:true
   });
 }
 
-// Event listeners
-document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',update));
+document.querySelectorAll('input').forEach(el=>el.addEventListener('input',update));
 document.addEventListener('DOMContentLoaded',update);
 </script>
+
 </body>
 </html>
-
- 
