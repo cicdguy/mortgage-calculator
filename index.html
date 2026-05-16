@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Mortgage Calculator</title>
+
+<!-- MaterializeCSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<style>
+.extra-payment { background-color: #d4edda !important; } /* green */
+.principal { font-weight:bold; color:blue; }
+.interest { font-style:italic; color:red; }
+.remaining-low { background-color:#fff3cd !important; } /* gold */
+.dataTables_wrapper { margin-top:20px; }
+.tooltipped { cursor: pointer; margin-left: 5px; color: #00695c; font-weight:bold; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-wrapper teal">
+    <a href="#" class="brand-logo center">Mortgage Calculator</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<h4 class="center-align">Compare Two Mortgage Scenarios</h4>
+
+<div class="row">
+  <div class="col s12 m6">
+    <h5>Scenario 1</h5>
+    <div class="input-field">
+      <input type="number" id="principal1" value="300000">
+      <label>Loan Amount ($)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="The total loan amount you are borrowing. Example: 300000">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" step="0.01" id="interestRate1" value="6">
+      <label>Interest Rate (%)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual interest rate of the loan. Example: 6 for 6%">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="termYears1" value="30">
+      <label>Term (Years)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Number of years for the loan. Example: 30">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="date" id="startDate1">
+      <label>Start Date</label>
+      <span class="tooltipped" data-position="right" data-tooltip="The date the mortgage starts. Example: 2026-06-16">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="extraPayment1" value="0">
+      <label>Extra Monthly Payment ($)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Extra payment you plan to pay each month. Example: 200">$?</span>
+    </div>
+    <div class="input-field">
+      <textarea id="extraTable1" class="materialize-textarea">{}</textarea>
+      <label>Extra Payments JSON (e.g., {1:500,12:1000})</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Specify extra payments for any month using JSON. Example: {1:500,12:1000}">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="propertyTax1" value="3600">
+      <label>Property Tax ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual property taxes. Example: 3600">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="homeInsurance1" value="1200">
+      <label>Home Insurance ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual home insurance. Example: 1200">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="pmi1" value="0">
+      <label>PMI ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Private mortgage insurance if down payment <20%. Example: 0">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" step="0.01" id="points1" value="0">
+      <label>Points (%)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Points paid upfront to lower interest rate. Example: 1">$?</span>
+    </div>
+  </div>
+
+  <div class="col s12 m6">
+    <h5>Scenario 2</h5>
+    <div class="input-field">
+      <input type="number" id="principal2" value="300000">
+      <label>Loan Amount ($)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="The total loan amount you are borrowing. Example: 300000">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" step="0.01" id="interestRate2" value="5.5">
+      <label>Interest Rate (%)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual interest rate of the loan. Example: 5.5">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="termYears2" value="30">
+      <label>Term (Years)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Number of years for the loan. Example: 30">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="date" id="startDate2">
+      <label>Start Date</label>
+      <span class="tooltipped" data-position="right" data-tooltip="The date the mortgage starts. Example: 2026-06-16">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="extraPayment2" value="0">
+      <label>Extra Monthly Payment ($)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Extra payment you plan to pay each month. Example: 200">$?</span>
+    </div>
+    <div class="input-field">
+      <textarea id="extraTable2" class="materialize-textarea">{}</textarea>
+      <label>Extra Payments JSON (e.g., {1:500,12:1000})</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Specify extra payments for any month using JSON. Example: {1:500,12:1000}">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="propertyTax2" value="3600">
+      <label>Property Tax ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual property taxes. Example: 3600">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="homeInsurance2" value="1200">
+      <label>Home Insurance ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Annual home insurance. Example: 1200">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" id="pmi2" value="0">
+      <label>PMI ($/year)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Private mortgage insurance if down payment <20%. Example: 0">$?</span>
+    </div>
+    <div class="input-field">
+      <input type="number" step="0.01" id="points2" value="0">
+      <label>Points (%)</label>
+      <span class="tooltipped" data-position="right" data-tooltip="Points paid upfront to lower interest rate. Example: 1">$?</span>
+    </div>
+  </div>
+</div>
+
+<h5>Mortgage Summary</h5>
+<div id="summary" class="card-panel teal lighten-5"></div>
+
+<h5>Principal vs Interest Chart</h5>
+<canvas id="principalInterestChart"></canvas>
+
+<h5>Breakeven Chart</h5>
+<canvas id="breakevenChart"></canvas>
+
+<h5>Total Savings Over Time</h5>
+<canvas id="totalSavingsChart"></canvas>
+
+<h5>Amortization Tables</h5>
+<div id="amortizationTables"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  M.Tooltip.init(document.querySelectorAll('.tooltipped'));
+});
+
+// Mortgage calculation logic
+function calculateMortgage(principal, rate, years, startDate, extra, extraTable={}, tax=0, insurance=0, pmi=0, points=0){
+  const monthlyRate = rate/12/100;
+  const n = years*12;
+  const pointsCost = principal*(points/100);
+  const monthlyPayment = principal*monthlyRate/(1-Math.pow(1+monthlyRate,-n));
+  let balance = principal;
+  let schedule = [];
+  for(let i=1;i<=n;i++){
+    const interest = balance*monthlyRate;
+    let principalPayment = monthlyPayment-interest;
+    let extraThis = extra + (extraTable[i]||0);
+    if(balance<principalPayment+extraThis) principalPayment=balance;
+    balance -= (principalPayment+extraThis);
+    balance = Math.max(0,balance);
+    const date = new Date(startDate); date.setMonth(date.getMonth()+i-1);
+    schedule.push({
+      month:i,
+      date:date.toISOString().split('T')[0],
+      principal:principalPayment,
+      interest,
+      extra:extraThis,
+      tax:tax/12,
+      insurance:insurance/12,
+      pmi:pmi/12,
+      total:principalPayment+interest+extraThis+tax/12+insurance/12+pmi/12,
+      balance
+    });
+    if(balance<=0) break;
+  }
+  const cumulative = schedule.map((p,j)=>schedule.slice(0,j+1).reduce((s,p)=>s+p.total,0));
+  const breakeven = cumulative.findIndex(c=>c>=pointsCost)+1||schedule.length;
+  return {schedule,monthlyPayment,totalInterest:schedule.reduce((s,p)=>s+p.interest,0),totalPaid:cumulative[cumulative.length-1],pointsCost,breakeven,cumulative};
+}
+
+let piChart, breakevenChart, savingsChart;
+
+function update(){
+  const parseJSON=(id)=>{try{return JSON.parse(document.getElementById(id).value)}catch(e){return {}}};
+  const extra1=parseJSON('extraTable1'); const extra2=parseJSON('extraTable2');
+  const inputs1=['principal1','interestRate1','termYears1','startDate1','extraPayment1','propertyTax1','homeInsurance1','pmi1','points1'].map(id=>document.getElementById(id).value);
+  const inputs2=['principal2','interestRate2','termYears2','startDate2','extraPayment2','propertyTax2','homeInsurance2','pmi2','points2'].map(id=>document.getElementById(id).value);
+
+  const m1 = calculateMortgage(parseFloat(inputs1[0]),parseFloat(inputs1[1]),parseInt(inputs1[2]),new Date(inputs1[3]||new Date()),parseFloat(inputs1[4]),extra1,parseFloat(inputs1[5]),parseFloat(inputs1[6]),parseFloat(inputs1[7]),parseFloat(inputs1[8]));
+  const m2 = calculateMortgage(parseFloat(inputs2[0]),parseFloat(inputs2[1]),parseInt(inputs2[2]),new Date(inputs2[3]||new Date()),parseFloat(inputs2[4]),extra2,parseFloat(inputs2[5]),parseFloat(inputs2[6]),parseFloat(inputs2[7]),parseFloat(inputs2[8]));
+
+  // Summary
+  document.getElementById('summary').innerHTML=`
+    <table class="highlight summary-table">
+      <tr><td>Scenario</td><td>Monthly Payment</td><td>Total Interest</td><td>Total Paid</td><td>Points Cost</td><td>Breakeven Month</td></tr>
+      <tr><td>1</td><td>$${m1.monthlyPayment.toFixed(2)}</td><td>$${m1.totalInterest.toFixed(2)}</td><td>$${m1.totalPaid.toFixed(2)}</td><td>$${m1.pointsCost.toFixed(2)}</td><td>${m1.breakeven}</td></tr>
+      <tr><td>2</td><td>$${m2.monthlyPayment.toFixed(2)}</td><td>$${m2.totalInterest.toFixed(2)}</td><td>$${m2.totalPaid.toFixed(2)}</td><td>$${m2.pointsCost.toFixed(2)}</td><td>${m2.breakeven}</td></tr>
+    </table>`;
+
+  // Charts
+  const labels = m1.schedule.map(p=>p.month);
+
+  // Principal vs Interest
+  const ctx = document.getElementById('principalInterestChart').getContext('2d');
+  if(piChart) piChart.destroy();
+  piChart = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Scenario1 Principal', data:m1.schedule.map(p=>p.principal), borderColor:'blue', fill:false},
+        {label:'Scenario1 Interest', data:m1.schedule.map(p=>p.interest), borderColor:'lightblue', fill:false},
+        {label:'Scenario2 Principal', data:m2.schedule.map(p=>p.principal), borderColor:'red', fill:false},
+        {label:'Scenario2 Interest', data:m2.schedule.map(p=>p.interest), borderColor:'pink', fill:false}
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'$'}}}}
+  });
+
+  // Breakeven chart
+  const ctx2 = document.getElementById('breakevenChart').getContext('2d');
+  if(breakevenChart) breakevenChart.destroy();
+  const breakevenPoint = Math.max(m1.breakeven,m2.breakeven);
+  breakevenChart = new Chart(ctx2,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Scenario1 Cumulative', data:m1.cumulative, borderColor:'blue', fill:false, tension:0.1},
+        {label:'Scenario2 Cumulative', data:m2.cumulative, borderColor:'red', fill:false, tension:0.1},
+        {label:'Breakeven Marker', data:Array(labels.length).fill(null).map((v,i)=> i+1===breakevenPoint ? m1.cumulative[i] : null), borderColor:'green', borderDash:[5,5], fill:false, pointRadius:8, pointStyle:'triangle'}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'top'},
+        tooltip:{callbacks:{label:function(context){
+          if(context.dataset.label==='Breakeven Marker') return 'Breakeven Point';
+          return `${context.dataset.label}: $${context.parsed.y.toFixed(2)} (Month ${context.label})`;
+        }}}
+      },
+      scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'Cumulative $'}}}
+    }
+  });
+
+  // Total Savings Chart
+  const cumulativeSavings = m1.schedule.map((p,idx) => (m2.cumulative[idx]||0) - (m1.cumulative[idx]||0));
+  const ctx3 = document.getElementById('totalSavingsChart').getContext('2d');
+  if(savingsChart) savingsChart.destroy();
+  savingsChart = new Chart(ctx3,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{label:'Cumulative Savings Scenario 1 vs 2', data:cumulativeSavings, borderColor:'green', fill:false, tension:0.1}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label: ctx=>`$${ctx.parsed.y.toFixed(2)} saved by month ${ctx.label}`}} },
+      scales:{x:{title:{display:true,text:'Month'}},y:{title:{display:true,text:'Cumulative Savings ($)'}}}
+    }
+  });
+
+  // Amortization Tables with tooltips & savings
+  const amortDiv = document.getElementById('amortizationTables');
+  amortDiv.innerHTML='';
+  [m1,m2].forEach((m,i)=>{
+    const tableId = `table${i}`;
+    const table = document.createElement('table');
+    table.id = tableId;
+    table.className = "display";
+    const head = document.createElement('thead');
+    const savingsHeader = i===0 ? '<th>Savings vs Scenario 2</th>' : '';
+    head.innerHTML=`<tr><th>Month</th><th>Date</th><th>Principal</th><th>Interest</th><th>Extra</th><th>Property Tax</th><th>Insurance</th><th>PMI</th><th>Total Payment</th><th>Balance</th>${savingsHeader}</tr>`;
+    table.appendChild(head);
+    const body = document.createElement('tbody');
+    let cumPrincipal=0, cumInterest=0, cumExtra=0, cumTotal=0;
+    m.schedule.forEach((p,idx)=>{
+      cumPrincipal+=p.principal; cumInterest+=p.interest; cumExtra+=p.extra; cumTotal+=p.total;
+      let savingsCell='';
+      if(i===0 && m2.cumulative[idx]!==undefined){
+        const savings = m2.cumulative[idx]-cumTotal;
+        const color = savings>=0 ? 'green-text' : 'red-text';
+        savingsCell=`<td class="${color}">$${savings.toFixed(2)}</td>`;
+      }
+      const tooltip=`Cumulative Total: $${cumTotal.toFixed(2)}\nPrincipal Paid: $${cumPrincipal.toFixed(2)}\nInterest Paid: $${cumInterest.toFixed(2)}\nExtra Paid: $${cumExtra.toFixed(2)}\nRemaining Balance: $${p.balance.toFixed(2)}${i===0 && m2.cumulative[idx]!==undefined ? '\nSavings vs Scenario 2: $'+(m2.cumulative[idx]-cumTotal).toFixed(2):''}`;
+      const tr = document.createElement('tr'); tr.title=tooltip;
+      tr.innerHTML=`<td>${p.month}</td><td>${p.date}</td><td class="principal">${p.principal.toFixed(2)}</td><td class="interest">${p.interest.toFixed(2)}</td><td class="${p.extra>0?'extra-payment':''}">${p.extra.toFixed(2)}</td><td>${p.tax.toFixed(2)}</td><td>${p.insurance.toFixed(2)}</td><td>${p.pmi.toFixed(2)}</td><td>${p.total.toFixed(2)}</td><td class="${p.balance<10000?'remaining-low':''}">${p.balance.toFixed(2)}</td>${savingsCell}`;
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    amortDiv.appendChild(document.createElement('h5')).textContent=`Scenario ${i+1} Amortization Table`;
+    amortDiv.appendChild(table);
+    $(`#${tableId}`).DataTable({destroy:true,pageLength:10,responsive:true});
+  });
+}
+
+document.querySelectorAll('input, textarea').forEach(el=>el.addEventListener('input',update));
+document.addEventListener('DOMContentLoaded',()=>update());
+</script>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+</body>
+</html>
